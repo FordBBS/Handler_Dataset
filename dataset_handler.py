@@ -670,7 +670,7 @@ def IBase_get_filled_list(listDataset):
 		if row_max < len(eachItem): row_max = len(eachItem)
 		listRes.append(eachItem)
 
-	if not flg_valid: return [listDataset]
+	if not flg_valid: return [[x] for x in listDataset]
 
 	#--- Fill information --------------------------------------------------------------------------
 	for idx, eachCol in enumerate(listRes):
