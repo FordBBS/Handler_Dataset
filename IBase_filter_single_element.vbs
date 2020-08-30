@@ -26,7 +26,7 @@ Function IBase_filter_single_element(ByVal strInput, ByVal arrFilter, ByVal flg_
 	Dim RetVal, cnt1, cnt2, flg_break, thisFilter
 
 	If Not flg_case Then strInput = LCase(strInput)
-	If flg_mode = 0 Then
+	If flg_mode = 0 or flg_mode = 3 Then
 		RetVal = True
 	Else
 		RetVal = False
