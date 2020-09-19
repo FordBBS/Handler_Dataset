@@ -1,6 +1,7 @@
 Function IBase_create_filter_combo(ByVal arrFilter)
 	'*** History ***********************************************************************************
 	' 2020/08/30, BBS:	- First Release
+	' 2020/09/19, BBS: 	- Improved
 	'
 	'***********************************************************************************************
 	
@@ -16,7 +17,7 @@ Function IBase_create_filter_combo(ByVal arrFilter)
 	IBase_create_filter_combo = Array()
 
 	'*** Pre-Validation ****************************************************************************
-	If Not (InStr(LCase(TypeName(arrFilter)), "variant") > 0 and UBound(arrFilter) > 0) Then
+	If Not (IsArray(arrFilter) and UBound(arrFilter) > 0) Then
 		Exit Function
 	End If
 
