@@ -1,66 +1,10 @@
 '*** History ***************************************************************************************
 ' 2020/08/30, BBS:	- First Release
 ' 					- Imported all mandatory materials
-' 2020/09/19, BBS: 	- Implemented 'IUser_arr_val_exist'
-' 					- Updated 'IUser_filter_dataset', 'IBase_create_filter_combo', 'hs_arr_append'
+' 2020/09/19, BBS: 	- Updated 'IUser_filter_dataset', 'IBase_create_filter_combo', 'hs_arr_append'
+' 					- Imported 'hs_merge_strlist'
 '
 '***************************************************************************************************
-
-Function IUser_arr_val_exist(ByVal arrInput, ByVal tarValue, ByVal flg_case)
-	'*** History ***********************************************************************************
-	' 2020/09/19, BBS:	- First Release
-	'
-	'***********************************************************************************************
-	
-	'*** Documentation *****************************************************************************
-	' 	Return an index where 'tarValue' is found on 'arrInput'
-	' 	-1 is returned if 'tarValue' doesn't exist on 'arrInput'
-	'	
-	'	Argument(s)
-	'	<Array> arrInput,	Array to be searched
-	'	<Str>	tarValue,	Target value in any format but Array, it will be converted to String anyway
-	'	<Bool>	flg_case,	False: Case doesn't matter, True: Case does matter
-	'
-	'***********************************************************************************************
-	
-	On Error Resume Next
-	IUser_arr_val_exist = -1
-
-	'*** Pre-Validation ****************************************************************************
-	If Not IsArray(arrInput) or len(CStr(tarValue)) = 0 Then
-		Exit Function
-	End If
-
-	'*** Initialization ****************************************************************************
-	Dim idx
-
-	tarValue = CStr(tarValue)
-
-	If Not (LCase(CStr(flg_case)) = "true" or LCase(CStr(flg_case)) = "false") Then
-		flg_case = True
-	End If
-
-	If Not flg_case Then
-		tarValue = LCase(tarValue)
-	End If
-
-	'*** Operations ********************************************************************************
-	For idx = 0 to UBound(arrInput)
-		If Not IsArray(arrInput(idx)) Then
-			If CStr(arrInput(idx)) = tarValue or _
-			 	(Not flg_case and LCase(CStr(arrInput(idx))) = tarValue) Then
-			 	
-			 	IUser_arr_val_exist = idx
-			 	Exit For
-			 End If
-		End If
-	Next
-
-	'*** Error handler *****************************************************************************
-	If Err.Number <> 0 Then
-		Err.Clear
-	End If
-End Function
 
 Function IUser_filter_dataset(ByVal inpDataset, ByVal inpFilter, ByVal flg_mode, ByVal flg_case)
 	'*** History ***********************************************************************************
@@ -360,6 +304,64 @@ Function hs_arr_append(ByRef arrInput, ByVal tarValue)
 	End If
 
 	arrInput(UBound(arrInput)) = tarValue
+
+	'*** Error handler *****************************************************************************
+	If Err.Number <> 0 Then
+		Err.Clear
+	End If
+End Function
+
+Function hs_merge_strlist(ByVal strList1, ByVal strList2, ByVal chr_join)
+	'*** History ***********************************************************************************
+	' 2020/09/19, BBS:	- First Release
+	'
+	'***********************************************************************************************
+
+	'*** Documentation *****************************************************************************
+	' 	Return merged string-list from two string-list with a separator 'chr_join'
+	'
+	'	Arguments
+	'	<String> strList1, 1st String-List to be merged
+	'	<String> strList2, 2nd String-list to be merged
+	'	<String> chr_join, A string character that is used as a separator
+	'
+	'***********************************************************************************************
+
+	On Error Resume Next
+	hs_merge_strlist = ""
+
+	'*** Initialization ****************************************************************************
+	Dim strRes
+
+	If len(CStr(chr_join)) = 0 Then
+		chr_join = ";"
+	End If
+
+	If IsArray(strList1) Then
+		strList1 = ""
+	End If
+
+	If IsArray(strList2) Then
+		strList2 = ""
+	End If
+
+	'*** Operations ********************************************************************************
+	'--- Merge two string-lists --------------------------------------------------------------------
+	strRes = strList1 & chr_join & strList2
+
+	If Left(strRes, 1) = chr_join Then
+		strRes = Mid(strRes, 2)
+	End If
+
+	If Right(strRes, 1) = chr_join Then
+		strRes = Left(strRes, len(strRes) - 1)
+	End If
+
+	'--- Remove any duplicate element --------------------------------------------------------------
+	strRes = hs_arr_remove_duplicate(Split(strRes, chr_join))
+
+	'--- Rebuild string-list then release ----------------------------------------------------------
+	hs_merge_strlist = Join(strRes, chr_join)
 
 	'*** Error handler *****************************************************************************
 	If Err.Number <> 0 Then
