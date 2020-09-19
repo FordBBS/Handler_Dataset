@@ -1,21 +1,71 @@
 '*** History ***************************************************************************************
 ' 2020/08/30, BBS:	- First Release
 ' 					- Imported all mandatory materials
+' 2020/09/19, BBS: 	- Implemented 'IUser_arr_val_exist'
+' 					- Updated 'IUser_filter_dataset', 'IBase_create_filter_combo', 'hs_arr_append'
 '
 '***************************************************************************************************
 
-'*** Imported Materials ****************************************************************************
-'--- Documentation ---------------------------------------------------------------------------------
-' (Version 2020/08/30) IUser_filter_dataset
-' (Version 2020/08/30) IBase_filter_single_element
-' (Version 2020/08/30) IBase_create_filter_combo
-' (Version 2020/08/25) hs_arr_append
-'
-'---------------------------------------------------------------------------------------------------
+Function IUser_arr_val_exist(ByVal arrInput, ByVal tarValue, ByVal flg_case)
+	'*** History ***********************************************************************************
+	' 2020/09/19, BBS:	- First Release
+	'
+	'***********************************************************************************************
+	
+	'*** Documentation *****************************************************************************
+	' 	Return an index where 'tarValue' is found on 'arrInput'
+	' 	-1 is returned if 'tarValue' doesn't exist on 'arrInput'
+	'	
+	'	Argument(s)
+	'	<Array> arrInput,	Array to be searched
+	'	<Str>	tarValue,	Target value in any format but Array, it will be converted to String anyway
+	'	<Bool>	flg_case,	False: Case doesn't matter, True: Case does matter
+	'
+	'***********************************************************************************************
+	
+	On Error Resume Next
+	IUser_arr_val_exist = -1
+
+	'*** Pre-Validation ****************************************************************************
+	If Not IsArray(arrInput) or len(CStr(tarValue)) = 0 Then
+		Exit Function
+	End If
+
+	'*** Initialization ****************************************************************************
+	Dim idx
+
+	tarValue = CStr(tarValue)
+
+	If Not (LCase(CStr(flg_case)) = "true" or LCase(CStr(flg_case)) = "false") Then
+		flg_case = True
+	End If
+
+	If Not flg_case Then
+		tarValue = LCase(tarValue)
+	End If
+
+	'*** Operations ********************************************************************************
+	For idx = 0 to UBound(arrInput)
+		If Not IsArray(arrInput(idx)) Then
+			If CStr(arrInput(idx)) = tarValue or _
+			 	(Not flg_case and LCase(CStr(arrInput(idx))) = tarValue) Then
+			 	
+			 	IUser_arr_val_exist = idx
+			 	Exit For
+			 End If
+		End If
+	Next
+
+	'*** Error handler *****************************************************************************
+	If Err.Number <> 0 Then
+		Err.Clear
+	End If
+End Function
 
 Function IUser_filter_dataset(ByVal inpDataset, ByVal inpFilter, ByVal flg_mode, ByVal flg_case)
 	'*** History ***********************************************************************************
 	' 2020/08/30, BBS:	- First Release
+	' 2020/09/19, BBS: 	- Improved
 	'
 	'***********************************************************************************************
 	
@@ -34,7 +84,7 @@ Function IUser_filter_dataset(ByVal inpDataset, ByVal inpFilter, ByVal flg_mode,
 	IUser_filter_dataset = Array()
 
 	'*** Pre-Validation ****************************************************************************
-	If InStr(LCase(TypeName(inpDataset)), "variant") > 0 and UBound(inpDataset) = 0 Then
+	If IsArray(inpDataset) and UBound(inpDataset) = 0 Then
 		Exit Function
 	End If
 
@@ -57,9 +107,9 @@ Function IUser_filter_dataset(ByVal inpDataset, ByVal inpFilter, ByVal flg_mode,
 
 	'*** Operations ********************************************************************************
 	'--- Prepare 'arrDataset' ----------------------------------------------------------------------
-	If InStr(LCase(TypeName(inpDataset)), "variant") > 0 Then
+	If IsArray(inpDataset) Then
 		For Each thisElement in inpDataset
-			If InStr(LCase(TypeName(thisElement)), "variant") = 0 Then
+			If Not IsArray(thisElement) Then
 				thisElement = CStr(thisElement)
 			End If
 
@@ -70,11 +120,11 @@ Function IUser_filter_dataset(ByVal inpDataset, ByVal inpFilter, ByVal flg_mode,
 	End If
 
 	'--- Prepare 'arrFilter' -----------------------------------------------------------------------
-	If InStr(LCase(TypeName(inpFilter)), "variant") > 0 Then
+	If IsArray(inpFilter) Then
 		cnt1 = -1
 
 		For Each thisElement in inpFilter
-			If InStr(LCase(TypeName(thisElement)), "variant") = 0 Then
+			If Not IsArray(thisElement) Then
 				cnt1 = cnt1 + 1
 				Call hs_arr_append(arrFilterTemp, Array(thisElement))
 			Else
@@ -98,7 +148,7 @@ Function IUser_filter_dataset(ByVal inpDataset, ByVal inpFilter, ByVal flg_mode,
 
 	'--- Filtering ---------------------------------------------------------------------------------
 	For Each thisElement in arrDataset
-		If InStr(LCase(TypeName(thisElement)), "variant") = 0 Then
+		If Not IsArray(thisElement) Then
 			RetVal = IBase_filter_single_element(thisElement, arrFilter, flg_mode, flg_case)
 		Else
 			RetVal = True
@@ -202,6 +252,7 @@ End Function
 Function IBase_create_filter_combo(ByVal arrFilter)
 	'*** History ***********************************************************************************
 	' 2020/08/30, BBS:	- First Release
+	' 2020/09/19, BBS: 	- Improved
 	'
 	'***********************************************************************************************
 	
@@ -217,7 +268,7 @@ Function IBase_create_filter_combo(ByVal arrFilter)
 	IBase_create_filter_combo = Array()
 
 	'*** Pre-Validation ****************************************************************************
-	If Not (InStr(LCase(TypeName(arrFilter)), "variant") > 0 and UBound(arrFilter) > 0) Then
+	If Not (IsArray(arrFilter) and UBound(arrFilter) > 0) Then
 		Exit Function
 	End If
 
@@ -278,6 +329,7 @@ Function hs_arr_append(ByRef arrInput, ByVal tarValue)
 	'*** History ***********************************************************************************
 	' 2020/08/23, BBS:	- First release
 	' 2020/08/25, BBS:  - Implemented handler for Non-Array 'arrInput'
+	' 2020/09/19, BBS: 	- Improved
 	'
 	'***********************************************************************************************
 	
@@ -298,7 +350,7 @@ Function hs_arr_append(ByRef arrInput, ByVal tarValue)
 
 	'*** Operations ********************************************************************************
 	'--- Ensure 'arrInput' is Array type before doing appending ------------------------------------
-	If InStr(LCase(TypeName(arrInput)), "variant") = 0 Then
+	If Not IsArray(arrInput) Then
 		arrInput = Array(arrInput)
 	End If
 
@@ -314,8 +366,3 @@ Function hs_arr_append(ByRef arrInput, ByVal tarValue)
 		Err.Clear
 	End If
 End Function
-'***************************************************************************************************
-
-'*** Local Material ********************************************************************************
-' No local material yet
-'***************************************************************************************************
